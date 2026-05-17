@@ -20,12 +20,9 @@ const BACKGROUND_MUSIC_URL = "/sadge.wav";
 const BUNNY_MESSAGES = [
   "Sorry, good night!",
   "I won't be free soon sorry.",
-  "I have deadlines sorry",
   "sorry I couldn't playy",
-  "I'm not done, and I'm sorry.",
   "bit distracted sorry",
   "sorry!",
-  "I have a lot of things to do sorry.",
   "I'm busy a bit sorry!",
   "Sorry for being so absent.",
 ];
@@ -256,16 +253,8 @@ export default function RatBunnyChaseGame() {
               <div
                 ref={boardRef}
                 className="relative overflow-hidden bg-emerald-50"
-                style={{ width: WIDTH, height: HEIGHT, maxWidth: "100%" }}
+                style={{ width: WIDTH, height: HEIGHT, maxWidth: "100%", backgroundImage: "url('/background.png')", backgroundSize: "cover", backgroundPosition: "center",}}
               >
-                <div
-                  className="absolute inset-0 opacity-40"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle at 20px 20px, rgba(0,0,0,0.08) 2px, transparent 0)",
-                    backgroundSize: "38px 38px",
-                  }}
-                />
 
                 <div className="absolute left-5 top-5 rounded-full bg-white/75 px-4 py-2 text-sm font-semibold shadow-sm">
                   Near misses: {nearMisses}
