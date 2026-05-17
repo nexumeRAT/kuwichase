@@ -489,9 +489,9 @@ export default function RatBunnyChaseGame() {
       <div className="mx-auto max-w-5xl space-y-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-4xl font-black tracking-tight">Whack-a-Rat</h1>
+            <h1 className="text-4xl font-black tracking-tight">Rat vs. Bunny</h1>
             <p className="mt-2 text-base text-zinc-600">
-              Chase the brat and chuw the carrats! WASD or arrow keys to move.
+              A tiny tragedy about persistence, speed, and one extremely evasive bunny.
             </p>
           </div>
           <div className="flex gap-2">
@@ -519,14 +519,7 @@ export default function RatBunnyChaseGame() {
                   backgroundPosition: "center",
                 }}
               >
-                <div
-                  className="absolute inset-0 opacity-40"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle at 20px 20px, rgba(0,0,0,0.08) 2px, transparent 0)",
-                    backgroundSize: "38px 38px",
-                  }}
-                />
+                <div className="absolute inset-0 bg-black/35" />
 
                 <div className="absolute left-5 top-5 z-20 rounded-2xl bg-white/75 px-4 py-2 text-sm font-semibold shadow-sm">
                   <div>Carrats chuwed: {nearMisses}</div>
