@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -66,7 +66,6 @@ export default function RatBunnyChaseGame() {
   const [rat, setRat] = useState({ x: 90, y: HEIGHT / 2 });
   const [bunny, setBunny] = useState({ x: WIDTH - 110, y: HEIGHT / 2 });
   const [nearMisses, setNearMisses] = useState(0);
-  const [message, setMessage] = useState("Use WASD or arrow keys. Catch the bunny... supposedly.");
   const [wiggle, setWiggle] = useState(false);
   const [ratFacing, setRatFacing] = useState("right");
   const [bunnyFacing, setBunnyFacing] = useState("left");
@@ -110,12 +109,6 @@ export default function RatBunnyChaseGame() {
     nearMissesRef.current = nearMisses;
   }, [nearMisses]);
 
-  const mood = useMemo(() => {
-    if (nearMisses >= 10) return "The bunny is now legally untouchable.";
-    if (nearMisses >= 6) return "So close. Emotionally devastating.";
-    if (nearMisses >= 3) return "The rat is beginning to suspect something.";
-    return "The chase begins.";
-  }, [nearMisses]);
 
   function canTriggerNearMiss() {
     return performance.now() >= nearMissInvulnerableUntil.current;
@@ -170,7 +163,6 @@ export default function RatBunnyChaseGame() {
 
     nearMissesRef.current = nextNearMissCount;
     setNearMisses(nextNearMissCount);
-    setMessage("Almost! The bunny slips away again.");
     setWiggle(true);
     setTimeout(() => setWiggle(false), 260);
   }
@@ -475,7 +467,6 @@ export default function RatBunnyChaseGame() {
     if (nearMissTransferTimeout.current) clearTimeout(nearMissTransferTimeout.current);
     if (escapingNearMissTimeout.current) clearTimeout(escapingNearMissTimeout.current);
 
-    setMessage("Use WASD or arrow keys. Catch the bunny... supposedly.");
   }
 
   const escapingFloatingImage = nearMisses % 5 === 4 ? SPECIAL_FLOATING_IMAGE : FLOATING_IMAGE;
@@ -490,8 +481,14 @@ export default function RatBunnyChaseGame() {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-4xl font-black tracking-tight">Whack-a-Rat</h1>
-            <p className="mt-2 text-base text-zinc-600">
-              Chase the brat and chuw the carrats! WASD or arrow keys to move.
+            <p className="mt-2 flex items-center gap-2 text-base text-zinc-600">
+              <img
+                src="https://cdn.discordapp.com/emojis/1493971581549019147.webp?size=160"
+                alt="melee"
+                className="h-6 w-6 select-none"
+                draggable={false}
+              />
+              <span>the brat and chuw the carrats! WASD or arrow keys to move.</span>
             </p>
           </div>
           <div className="flex gap-2">
