@@ -489,9 +489,9 @@ export default function RatBunnyChaseGame() {
       <div className="mx-auto max-w-5xl space-y-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-4xl font-black tracking-tight">Rat vs. Bunny</h1>
+            <h1 className="text-4xl font-black tracking-tight">Whack-a-Rat</h1>
             <p className="mt-2 text-base text-zinc-600">
-              A tiny tragedy about persistence, speed, and one extremely evasive bunny.
+              Chase the brat and chuw the carrats! WASD or arrow keys to move.
             </p>
           </div>
           <div className="flex gap-2">
