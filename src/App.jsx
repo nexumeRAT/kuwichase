@@ -521,7 +521,7 @@ export default function RatBunnyChaseGame() {
               >
                 <div className="absolute inset-0 bg-black/85" />
 
-                <div className="absolute left-5 top-5 z-20 text-sm font-semibold text-white drop-shadow-lg">
+                <div className="absolute left-2 top-2 z-20 text-sm font-semibold text-white drop-shadow-lg">
                   <div>Carrats chuwed: {nearMisses}</div>
                   <img
                     src={CARRAT_IMAGE}
