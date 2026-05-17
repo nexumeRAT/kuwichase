@@ -519,14 +519,14 @@ export default function RatBunnyChaseGame() {
                   backgroundPosition: "center",
                 }}
               >
-                <div className="absolute inset-0 bg-black/75" />
+                <div className="absolute inset-0 bg-black/85" />
 
-                <div className="absolute left-5 top-5 z-20 rounded-2xl bg-white/75 px-4 py-2 text-sm font-semibold shadow-sm">
+                <div className="absolute left-5 top-5 z-20 text-sm font-semibold text-white drop-shadow-lg">
                   <div>Carrats chuwed: {nearMisses}</div>
                   <img
                     src={CARRAT_IMAGE}
                     alt="carrat"
-                    className="mt-1 h-10 w-10 select-none"
+                    className="mt-1 h-14 w-14 select-none"
                     draggable={false}
                   />
                 </div>
