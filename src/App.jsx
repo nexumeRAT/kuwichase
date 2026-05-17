@@ -78,6 +78,7 @@ export default function RatBunnyChaseGame() {
   const keysPressed = useRef(new Set());
   const audioRef = useRef(null);
   const fifthNearMissAudioRef = useRef(null);
+  const fifthNearMissSoundPool = useRef([]);
   const ratRef = useRef(rat);
   const bunnyRef = useRef(bunny);
   const nearMissesRef = useRef(nearMisses);
@@ -121,9 +122,12 @@ export default function RatBunnyChaseGame() {
     const nextNearMissCount = nearMissesRef.current + 1;
     const isSpecialNearMiss = nextNearMissCount % 5 === 0;
 
-    if (isSpecialNearMiss && fifthNearMissAudioRef.current) {
-      fifthNearMissAudioRef.current.currentTime = 0;
-      fifthNearMissAudioRef.current.play();
+    if (isSpecialNearMiss) {
+      const sound = fifthNearMissSoundPool.current.find((audio) => audio.paused) || fifthNearMissAudioRef.current;
+      if (sound) {
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
+      }
     }
 
     nearMissInvulnerableUntil.current = now + 3000;
@@ -348,6 +352,21 @@ export default function RatBunnyChaseGame() {
   async function toggleBackgroundMusic() {
     const audio = audioRef.current;
     if (!audio) return;
+
+    if (fifthNearMissSoundPool.current.length === 0) {
+      fifthNearMissSoundPool.current = Array.from({ length: 4 }, () => {
+        const sound = new Audio(FIFTH_NEAR_MISS_SOUND_URL);
+        sound.preload = "auto";
+        sound.volume = 0.9;
+        sound.load();
+        return sound;
+      });
+    }
+
+    if (fifthNearMissAudioRef.current) {
+      fifthNearMissAudioRef.current.volume = 0.9;
+      fifthNearMissAudioRef.current.load();
+    }
 
     if (audio.paused) {
       audio.volume = 0.35;
