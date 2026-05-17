@@ -129,6 +129,7 @@ export default function RatBunnyChaseGame() {
     const isSpecialNearMiss = nextNearMissCount % 5 === 0;
 
     if (isSpecialNearMiss) {
+      playNearMissSound(0.35);
       playFifthNearMissSound();
     } else {
       playNearMissSound();
@@ -402,8 +403,8 @@ export default function RatBunnyChaseGame() {
     ]);
   }
 
-  function playNearMissSound() {
-    playSoundBuffer(nearMissBufferRef, 0.75);
+  function playNearMissSound(volume = 0.75) {
+    playSoundBuffer(nearMissBufferRef, volume);
   }
 
   function playFifthNearMissSound() {
