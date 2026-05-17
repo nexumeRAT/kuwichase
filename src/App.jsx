@@ -46,7 +46,6 @@ export default function RatBunnyChaseGame() {
   const [rat, setRat] = useState({ x: 90, y: HEIGHT / 2 });
   const [bunny, setBunny] = useState({ x: WIDTH - 110, y: HEIGHT / 2 });
   const [nearMisses, setNearMisses] = useState(0);
-  const [message, setMessage] = useState("Use WASD or arrow keys. Catch the bunny... supposedly.");
   const [wiggle, setWiggle] = useState(false);
   const [ratFacing, setRatFacing] = useState("right");
   const [bunnyFacing, setBunnyFacing] = useState("left");
@@ -87,7 +86,6 @@ export default function RatBunnyChaseGame() {
             }
             return next;
           });
-          setMessage("Almost! The bunny performs a suspiciously perfect dodge.");
           setWiggle(true);
           setTimeout(() => setWiggle(false), 260);
 
@@ -118,12 +116,6 @@ export default function RatBunnyChaseGame() {
           if (escaped.x > currentBunny.x) setBunnyFacing("right");
 
           return escaped;
-        }
-
-        if (d < 170) {
-          setMessage("The bunny watches you with deeply unfair confidence.");
-        } else {
-          setMessage("Use WASD or arrow keys. Surely this time will work.");
         }
 
         return currentBunny;
@@ -214,7 +206,6 @@ export default function RatBunnyChaseGame() {
     setShowRatReaction(false);
     if (ratReactionTimeout.current) clearTimeout(ratReactionTimeout.current);
     if (bunnyMessageTimeout.current) clearTimeout(bunnyMessageTimeout.current);
-    setMessage("Use WASD or arrow keys. Catch the bunny... supposedly.");
   }
 
   return (
