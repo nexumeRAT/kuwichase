@@ -510,7 +510,14 @@ export default function RatBunnyChaseGame() {
               <div
                 ref={boardRef}
                 className="relative overflow-hidden bg-emerald-50"
-                style={{ width: WIDTH, height: HEIGHT, maxWidth: "100%" }}
+                style={{
+                  width: WIDTH,
+                  height: HEIGHT,
+                  maxWidth: "100%",
+                  backgroundImage: "url('/background.png')",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
               >
                 <div
                   className="absolute inset-0 opacity-40"
