@@ -27,6 +27,7 @@ const CARRAT_IMAGE = "https://cdn.discordapp.com/emojis/1505194496772669543.webp
 const ESCAPING_NEAR_MISS_IMAGE = "https://cdn.discordapp.com/emojis/1421177556542951425.webp?size=160";
 const BACKGROUND_MUSIC_URL = "/sadge.wav";
 const FIFTH_NEAR_MISS_SOUND_URL = "/fifth-near-miss.wav";
+const NEAR_MISS_SOUND_URL = "/near-miss.wav";
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -82,6 +83,8 @@ export default function RatBunnyChaseGame() {
   const audioContextRef = useRef(null);
   const fifthNearMissBufferRef = useRef(null);
   const fifthNearMissLoadingRef = useRef(false);
+  const nearMissBufferRef = useRef(null);
+  const nearMissLoadingRef = useRef(false);
   const ratRef = useRef(rat);
   const bunnyRef = useRef(bunny);
   const nearMissesRef = useRef(nearMisses);
@@ -124,6 +127,8 @@ export default function RatBunnyChaseGame() {
 
     const nextNearMissCount = nearMissesRef.current + 1;
     const isSpecialNearMiss = nextNearMissCount % 5 === 0;
+
+    playNearMissSound();
 
     if (isSpecialNearMiss) {
       playFifthNearMissSound();
@@ -331,7 +336,7 @@ export default function RatBunnyChaseGame() {
       if (!["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key)) return;
       event.preventDefault();
       keysPressed.current.add(key);
-      prepareFifthNearMissSound();
+      prepareNearMissSounds();
     }
 
     function onKeyUp(event) {
@@ -349,7 +354,7 @@ export default function RatBunnyChaseGame() {
     };
   }, []);
 
-  async function prepareFifthNearMissSound() {
+  async function prepareSound(url, bufferRef, loadingRef) {
     if (!audioContextRef.current) {
       audioContextRef.current = new AudioContext();
     }
@@ -360,34 +365,49 @@ export default function RatBunnyChaseGame() {
       await context.resume().catch(() => {});
     }
 
-    if (fifthNearMissBufferRef.current || fifthNearMissLoadingRef.current) return;
+    if (bufferRef.current || loadingRef.current) return;
 
-    fifthNearMissLoadingRef.current = true;
+    loadingRef.current = true;
     try {
-      const response = await fetch(FIFTH_NEAR_MISS_SOUND_URL);
+      const response = await fetch(url);
       const arrayBuffer = await response.arrayBuffer();
-      fifthNearMissBufferRef.current = await context.decodeAudioData(arrayBuffer);
+      bufferRef.current = await context.decodeAudioData(arrayBuffer);
     } catch (error) {
-      console.warn("Could not prepare 5th near-miss sound:", error);
+      console.warn("Could not prepare sound:", error);
     } finally {
-      fifthNearMissLoadingRef.current = false;
+      loadingRef.current = false;
     }
   }
 
-  function playFifthNearMissSound() {
+  function playSoundBuffer(bufferRef, volume = 0.9) {
     const context = audioContextRef.current;
-    const buffer = fifthNearMissBufferRef.current;
+    const buffer = bufferRef.current;
 
-    if (context && buffer) {
-      const source = context.createBufferSource();
-      const gain = context.createGain();
-      gain.gain.value = 0.9;
-      source.buffer = buffer;
-      source.connect(gain);
-      gain.connect(context.destination);
-      source.start(0);
-      return;
-    }
+    if (!context || !buffer) return false;
+
+    const source = context.createBufferSource();
+    const gain = context.createGain();
+    gain.gain.value = volume;
+    source.buffer = buffer;
+    source.connect(gain);
+    gain.connect(context.destination);
+    source.start(0);
+    return true;
+  }
+
+  async function prepareNearMissSounds() {
+    await Promise.all([
+      prepareSound(NEAR_MISS_SOUND_URL, nearMissBufferRef, nearMissLoadingRef),
+      prepareSound(FIFTH_NEAR_MISS_SOUND_URL, fifthNearMissBufferRef, fifthNearMissLoadingRef),
+    ]);
+  }
+
+  function playNearMissSound() {
+    playSoundBuffer(nearMissBufferRef, 0.75);
+  }
+
+  function playFifthNearMissSound() {
+    if (playSoundBuffer(fifthNearMissBufferRef, 0.9)) return;
 
     const fallbackSound = fifthNearMissSoundPool.current.find((audio) => audio.paused) || fifthNearMissAudioRef.current;
     if (fallbackSound) {
@@ -415,7 +435,7 @@ export default function RatBunnyChaseGame() {
       fifthNearMissAudioRef.current.load();
     }
 
-    await prepareFifthNearMissSound();
+    await prepareNearMissSounds();
 
     if (audio.paused) {
       audio.volume = 0.35;
