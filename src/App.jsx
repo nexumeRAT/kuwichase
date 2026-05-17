@@ -79,6 +79,9 @@ export default function RatBunnyChaseGame() {
   const audioRef = useRef(null);
   const fifthNearMissAudioRef = useRef(null);
   const fifthNearMissSoundPool = useRef([]);
+  const audioContextRef = useRef(null);
+  const fifthNearMissBufferRef = useRef(null);
+  const fifthNearMissLoadingRef = useRef(false);
   const ratRef = useRef(rat);
   const bunnyRef = useRef(bunny);
   const nearMissesRef = useRef(nearMisses);
@@ -123,11 +126,7 @@ export default function RatBunnyChaseGame() {
     const isSpecialNearMiss = nextNearMissCount % 5 === 0;
 
     if (isSpecialNearMiss) {
-      const sound = fifthNearMissSoundPool.current.find((audio) => audio.paused) || fifthNearMissAudioRef.current;
-      if (sound) {
-        sound.currentTime = 0;
-        sound.play().catch(() => {});
-      }
+      playFifthNearMissSound();
     }
 
     nearMissInvulnerableUntil.current = now + 3000;
@@ -332,6 +331,7 @@ export default function RatBunnyChaseGame() {
       if (!["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key)) return;
       event.preventDefault();
       keysPressed.current.add(key);
+      prepareFifthNearMissSound();
     }
 
     function onKeyUp(event) {
@@ -348,6 +348,53 @@ export default function RatBunnyChaseGame() {
       cancelAnimationFrame(animationFrame);
     };
   }, []);
+
+  async function prepareFifthNearMissSound() {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext();
+    }
+
+    const context = audioContextRef.current;
+
+    if (context.state === "suspended") {
+      await context.resume().catch(() => {});
+    }
+
+    if (fifthNearMissBufferRef.current || fifthNearMissLoadingRef.current) return;
+
+    fifthNearMissLoadingRef.current = true;
+    try {
+      const response = await fetch(FIFTH_NEAR_MISS_SOUND_URL);
+      const arrayBuffer = await response.arrayBuffer();
+      fifthNearMissBufferRef.current = await context.decodeAudioData(arrayBuffer);
+    } catch (error) {
+      console.warn("Could not prepare 5th near-miss sound:", error);
+    } finally {
+      fifthNearMissLoadingRef.current = false;
+    }
+  }
+
+  function playFifthNearMissSound() {
+    const context = audioContextRef.current;
+    const buffer = fifthNearMissBufferRef.current;
+
+    if (context && buffer) {
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+      gain.gain.value = 0.9;
+      source.buffer = buffer;
+      source.connect(gain);
+      gain.connect(context.destination);
+      source.start(0);
+      return;
+    }
+
+    const fallbackSound = fifthNearMissSoundPool.current.find((audio) => audio.paused) || fifthNearMissAudioRef.current;
+    if (fallbackSound) {
+      fallbackSound.currentTime = 0;
+      fallbackSound.play().catch(() => {});
+    }
+  }
 
   async function toggleBackgroundMusic() {
     const audio = audioRef.current;
@@ -367,6 +414,8 @@ export default function RatBunnyChaseGame() {
       fifthNearMissAudioRef.current.volume = 0.9;
       fifthNearMissAudioRef.current.load();
     }
+
+    await prepareFifthNearMissSound();
 
     if (audio.paused) {
       audio.volume = 0.35;
