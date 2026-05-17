@@ -266,8 +266,8 @@ export default function RatBunnyChaseGame() {
                     alt="rat reaction"
                     className="absolute z-10 h-14 w-14 select-none drop-shadow-sm"
                     style={{
-                      left: rat.x - 28,
-                      top: rat.y - RAT_SIZE / 2 - 56,
+                      left: clamp(rat.x - 28, 8, WIDTH - 64),
+                      top: clamp(rat.y - RAT_SIZE / 2 - 56, 8, HEIGHT - 64),
                     }}
                     draggable={false}
                   />
@@ -291,8 +291,8 @@ export default function RatBunnyChaseGame() {
                   <div
                     className="absolute z-10 max-w-56 rounded-2xl bg-white/90 px-4 py-2 text-center text-sm font-bold text-zinc-800 shadow-lg"
                     style={{
-                      left: bunny.x - 96,
-                      top: bunny.y - BUNNY_SIZE / 2 - 54,
+                      left: clamp(bunny.x - 96, 8, WIDTH - 232),
+                      top: clamp(bunny.y - BUNNY_SIZE / 2 - 54, 8, HEIGHT - 60),
                     }}
                   >
                     {bunnyMessage}
