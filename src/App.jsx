@@ -59,13 +59,6 @@ export default function RatBunnyChaseGame() {
   const bunnyMessageTimeout = useRef(null);
   const audioRef = useRef(null);
 
-  const mood = useMemo(() => {
-    if (nearMisses >= 10) return "The bunny is now legally untouchable.";
-    if (nearMisses >= 6) return "So close. Emotionally devastating.";
-    if (nearMisses >= 3) return "The rat is beginning to suspect something.";
-    return "The chase begins.";
-  }, [nearMisses]);
-
   function moveRat(dx, dy) {
     if (dx < 0) setRatFacing("left");
     if (dx > 0) setRatFacing("right");
