@@ -128,10 +128,10 @@ export default function RatBunnyChaseGame() {
     const nextNearMissCount = nearMissesRef.current + 1;
     const isSpecialNearMiss = nextNearMissCount % 5 === 0;
 
-    playNearMissSound();
-
     if (isSpecialNearMiss) {
       playFifthNearMissSound();
+    } else {
+      playNearMissSound();
     }
 
     nearMissInvulnerableUntil.current = now + 3000;
