@@ -488,7 +488,7 @@ export default function RatBunnyChaseGame() {
                 className="h-6 w-6 select-none"
                 draggable={false}
               />
-              <span>the brat and chuw the carrats! WASD or arrow keys to move.</span>
+              <span>Squish the brat and chuw the carrats! WASD or arrow keys to move.</span>
             </p>
           </div>
           <div className="flex gap-2">
