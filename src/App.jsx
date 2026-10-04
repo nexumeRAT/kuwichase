@@ -25,9 +25,9 @@ const SPECIAL_FLOATING_IMAGE = "https://cdn.discordapp.com/emojis/15049133914231
 const PLAYER_NEAR_MISS_IMAGE = "https://cdn.discordapp.com/emojis/1421398979282735176.webp?size=160&animated=true";
 const CARRAT_IMAGE = "https://cdn.discordapp.com/emojis/1505194496772669543.webp?size=160";
 const ESCAPING_NEAR_MISS_IMAGE = "https://cdn.discordapp.com/emojis/1421177556542951425.webp?size=160";
-const BACKGROUND_MUSIC_URL = "/sadge.wav";
-const FIFTH_NEAR_MISS_SOUND_URL = "/fifth-near-miss.wav";
-const NEAR_MISS_SOUND_URL = "/near-miss.wav";
+const BACKGROUND_MUSIC_URL = `${import.meta.env.BASE_URL}sadge.wav`;
+const FIFTH_NEAR_MISS_SOUND_URL = `${import.meta.env.BASE_URL}fifth-near-miss.wav`;
+const NEAR_MISS_SOUND_URL = `${import.meta.env.BASE_URL}near-miss.wav`;
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -511,7 +511,7 @@ export default function RatBunnyChaseGame() {
                   width: WIDTH,
                   height: HEIGHT,
                   maxWidth: "100%",
-                  backgroundImage: "url('/background.png')",
+                  backgroundImage: `url('${import.meta.env.BASE_URL}background.png')`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }}
