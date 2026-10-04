@@ -502,6 +502,13 @@ export default function RatBunnyChaseGame() {
         </div>
 
         <div className="inline-grid gap-4">
+	  <div
+	    style={{
+	      transform: "scale(1.5)",
+	      transformOrigin: "top center",
+	      marginBottom: "180px",
+	    }}
+	  >
           <Card className="overflow-hidden rounded-3xl border-zinc-200 shadow-xl">
             <CardContent className="p-0">
               <div
@@ -596,6 +603,7 @@ export default function RatBunnyChaseGame() {
               </div>
             </CardContent>
           </Card>
+	</div>
         </div>
       </div>
     </div>
