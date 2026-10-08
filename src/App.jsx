@@ -473,7 +473,7 @@ export default function RatBunnyChaseGame() {
   const playerFloatingImage = specialNearMissTransfer ? SPECIAL_FLOATING_IMAGE : FLOATING_IMAGE;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-100 via-stone-100 to-amber-50 p-6 text-zinc-900">
+    <div className="min-h-screen bg-[#242424] p-6 text-zinc-100">
       <audio ref={audioRef} src={BACKGROUND_MUSIC_URL} loop preload="auto" />
       <audio ref={fifthNearMissAudioRef} src={FIFTH_NEAR_MISS_SOUND_URL} preload="auto" />
 
@@ -481,7 +481,7 @@ export default function RatBunnyChaseGame() {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-4xl font-black tracking-tight">Whack-a-Rat</h1>
-            <p className="mt-2 flex items-center gap-2 text-base text-zinc-600">
+            <p className="mt-2 flex items-center gap-2 text-base text-zinc-400">
               <img
                 src="https://cdn.discordapp.com/emojis/1493971581549019147.webp?size=160"
                 alt="melee"
@@ -509,7 +509,7 @@ export default function RatBunnyChaseGame() {
 	      marginBottom: "180px",
 	    }}
 	  >
-          <Card className="overflow-hidden rounded-3xl border-zinc-200 shadow-xl">
+          <Card className="overflow-hidden rounded-3xl !border-0 !bg-transparent !shadow-none !ring-0">
             <CardContent className="p-0">
               <div
                 ref={boardRef}
@@ -589,17 +589,6 @@ export default function RatBunnyChaseGame() {
                   />
                 </motion.div>
 
-                <motion.div
-                  className="absolute rounded-full border-2 border-dashed border-pink-300/70"
-                  animate={{
-                    x: bunny.x - SAFE_DISTANCE,
-                    y: bunny.y - SAFE_DISTANCE,
-                    width: SAFE_DISTANCE * 2,
-                    height: SAFE_DISTANCE * 2,
-                    opacity: wiggle ? 0.4 : 0.13,
-                  }}
-                  transition={{ duration: 0.06, ease: "linear" }}
-                />
               </div>
             </CardContent>
           </Card>

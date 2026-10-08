@@ -260,3 +260,10 @@ code {
     @apply bg-background text-foreground;}
   html {
     @apply font-sans;}}
+
+html,
+body,
+#root {
+  background-color: #242424;
+  min-height: 100%;
+}
