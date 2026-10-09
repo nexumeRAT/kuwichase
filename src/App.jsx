@@ -70,13 +70,229 @@ export default function RatBunnyChaseGame() {
   const [ratFacing, setRatFacing] = useState("right");
   const [bunnyFacing, setBunnyFacing] = useState("left");
   const [musicPlaying, setMusicPlaying] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const gameStartedRef = useRef(false);
   const [nearMissTransfer, setNearMissTransfer] = useState(false);
   const [specialNearMissTransfer, setSpecialNearMissTransfer] = useState(false);
   const [escapingNearMiss, setEscapingNearMiss] = useState(false);
+  const calculateGameScale = () => {
+    if (typeof window === "undefined") return 1;
+
+    const isMobile = window.matchMedia("(pointer: coarse)").matches;
+
+    if (!isMobile) {
+      const fullscreen = Boolean(document.fullscreenElement);
+
+      // 24px padding on each side, matching p-6.
+      const padding = 48;
+
+      const availableWidth = window.innerWidth - padding;
+      const availableHeight = window.innerHeight;
+
+      const maxScale = fullscreen ? Infinity : 2.0;
+
+      return Math.max(
+        0.1,
+        Math.min(maxScale, availableWidth / WIDTH, availableHeight / HEIGHT)
+      );
+    }
+
+    const availableWidth = window.visualViewport?.width ?? window.innerWidth;
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+
+    const isLandscape = availableWidth > viewportHeight;
+
+    const availableHeight = viewportHeight;
+
+    return Math.max(
+      0.1,
+      Math.min(
+        availableWidth / WIDTH,
+        availableHeight / HEIGHT
+      )
+    );
+  };
+
+  const [gameScale, setGameScale] = useState(calculateGameScale);
+
+  useEffect(() => {
+    const updateScale = () => {
+      setGameScale(calculateGameScale());
+    };
+
+    updateScale();
+
+    window.addEventListener("resize", updateScale);
+    window.addEventListener("orientationchange", updateScale);
+    document.addEventListener("fullscreenchange", updateScale);
+    window.visualViewport?.addEventListener("resize", updateScale);
+
+    return () => {
+      window.removeEventListener("resize", updateScale);
+      window.removeEventListener("orientationchange", updateScale);
+      document.removeEventListener("fullscreenchange", updateScale);
+      window.visualViewport?.removeEventListener("resize", updateScale);
+    };
+  }, []);
+  
+  useEffect(() => {
+  function updateJoystickPlacement() {
+    if (!boardRef.current) return;
+
+    const rect = boardRef.current.getBoundingClientRect();
+    const size = 112;
+    const gap = 12;
+    const margin = 8;
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const landscape = viewportWidth > viewportHeight;
+
+    let left;
+    let top;
+
+    if (landscape && rect.left >= size + gap + margin) {
+      left = (rect.left - size) / 2;
+      top = rect.top + (rect.height - size) / 2;
+    } else if (
+      !landscape &&
+      viewportHeight - rect.bottom >= size + gap + margin
+    ) {
+      // Center horizontally below the game
+      left = (viewportWidth - size) / 2;
+
+      // Center vertically in the remaining space
+      top = rect.bottom + (viewportHeight - rect.bottom - size) / 2;
+    } else {
+      left = rect.left + gap;
+      top = rect.bottom - size - gap;
+    }
+
+    setJoystickPlacement({
+      left: Math.max(margin, Math.min(left, viewportWidth - size - margin)),
+      top: Math.max(margin, Math.min(top, viewportHeight - size - margin)),
+    });
+  }
+
+  const frame = requestAnimationFrame(updateJoystickPlacement);
+
+  window.addEventListener("resize", updateJoystickPlacement);
+  window.addEventListener("scroll", updateJoystickPlacement);
+
+  return () => {
+    cancelAnimationFrame(frame);
+    window.removeEventListener("resize", updateJoystickPlacement);
+    window.removeEventListener("scroll", updateJoystickPlacement);
+  };
+}, [gameScale]);
+
+useEffect(() => {
+  function updateDesktopControlsPosition() {
+    if (!boardRef.current) return;
+
+    const rect = boardRef.current.getBoundingClientRect();
+
+    setDesktopControlsPosition({
+      top: rect.top + 8,
+      right: window.innerWidth - rect.right + 8,
+    });
+  }
+
+  const frame = requestAnimationFrame(updateDesktopControlsPosition);
+
+  window.addEventListener("resize", updateDesktopControlsPosition);
+  document.addEventListener("fullscreenchange", updateDesktopControlsPosition);
+
+  return () => {
+    cancelAnimationFrame(frame);
+    window.removeEventListener("resize", updateDesktopControlsPosition);
+    document.removeEventListener("fullscreenchange", updateDesktopControlsPosition);
+  };
+}, [gameScale]);
+
+useEffect(() => {
+  function updateMobileControls() {
+    if (
+      !boardRef.current ||
+      !window.matchMedia("(pointer: coarse)").matches
+    ) {
+      setMobileControls(null);
+      return;
+    }
+
+    const rect = boardRef.current.getBoundingClientRect();
+    const width = window.visualViewport?.width ?? window.innerWidth;
+    const height = window.visualViewport?.height ?? window.innerHeight;
+    const landscape = width > height;
+
+    if (landscape) {
+      const panelWidth = 112;
+      const panelHeight = 136;
+      const gap = 8;
+
+      const spaceRight = width - rect.right;
+      const spaceLeft = rect.left;
+
+      if (spaceRight >= panelWidth + gap) {
+        setMobileControls({
+          mode: "landscape",
+          left: rect.right + (spaceRight - panelWidth) / 2,
+          top: rect.top + (rect.height - panelHeight) / 2,
+          overlay: false,
+        });
+      } else if (spaceLeft >= panelWidth + gap) {
+        setMobileControls({
+          mode: "landscape",
+          left: (spaceLeft - panelWidth) / 2,
+          top: rect.top + (rect.height - panelHeight) / 2,
+          overlay: false,
+        });
+      } else {
+        setMobileControls({
+          mode: "landscape",
+          left: Math.max(0, Math.min(rect.right - gap, width - gap)),
+          top: Math.max(0, rect.top + gap),
+          overlay: true,
+        });
+      }
+    } else {
+      const panelHeight = 44;
+
+      if (rect.top >= panelHeight + 8) {
+        setMobileControls({
+          mode: "portrait",
+          left: width / 2,
+          top: rect.top - panelHeight - 8,
+        });
+      } else {
+        setMobileControls(null);
+      }
+    }
+  }
+
+  const frame = requestAnimationFrame(updateMobileControls);
+
+  window.addEventListener("resize", updateMobileControls);
+  window.visualViewport?.addEventListener("resize", updateMobileControls);
+
+  return () => {
+    cancelAnimationFrame(frame);
+    window.removeEventListener("resize", updateMobileControls);
+    window.visualViewport?.removeEventListener("resize", updateMobileControls);
+  };
+}, [gameScale]);
 
   const boardRef = useRef(null);
+  const [desktopControlsPosition, setDesktopControlsPosition] = useState(null);
+  const [joystickPlacement, setJoystickPlacement] = useState(null);
+  const [mobileControls, setMobileControls] = useState(null);
   const keysPressed = useRef(new Set());
+  const joystick = useRef({ x: 0, y: 0 });
+  const joystickPointer = useRef(null);
+  const [stickPosition, setStickPosition] = useState({ x: 0, y: 0 });
   const audioRef = useRef(null);
+  const musicManuallyPaused = useRef(false);
   const fifthNearMissAudioRef = useRef(null);
   const fifthNearMissSoundPool = useRef([]);
   const audioContextRef = useRef(null);
@@ -108,6 +324,25 @@ export default function RatBunnyChaseGame() {
   useEffect(() => {
     nearMissesRef.current = nearMisses;
   }, [nearMisses]);
+  
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.volume = 0.35;
+
+    function syncMusicState() {
+      setMusicPlaying(!audio.paused);
+    }
+
+    audio.addEventListener("play", syncMusicState);
+    audio.addEventListener("pause", syncMusicState);
+
+    return () => {
+      audio.removeEventListener("play", syncMusicState);
+      audio.removeEventListener("pause", syncMusicState);
+    };
+  }, []);
 
 
   function canTriggerNearMiss() {
@@ -308,19 +543,33 @@ export default function RatBunnyChaseGame() {
         return { dx: dx * diagonalSpeed, dy: dy * diagonalSpeed };
       }
 
-      return { dx, dy };
+    if (dx === 0 && dy === 0) {
+      return {
+        dx: joystick.current.x,
+        dy: joystick.current.y,
+      };
+    }
+
+    return { dx, dy };
     }
 
     function gameLoop(now) {
       const deltaSeconds = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
 
-      const direction = getDirection();
-      if (direction.dx !== 0 || direction.dy !== 0) {
-        moveRat(direction.dx * RAT_SPEED * deltaSeconds, direction.dy * RAT_SPEED * deltaSeconds);
+      if (gameStartedRef.current) {
+        const direction = getDirection();
+
+        if (direction.dx !== 0 || direction.dy !== 0) {
+          moveRat(
+            direction.dx * RAT_SPEED * deltaSeconds,
+            direction.dy * RAT_SPEED * deltaSeconds
+          );
+        }
+
+        moveBunny(deltaSeconds);
       }
 
-      moveBunny(deltaSeconds);
       animationFrame = requestAnimationFrame(gameLoop);
     }
 
@@ -328,6 +577,7 @@ export default function RatBunnyChaseGame() {
       const key = event.key.toLowerCase();
       if (!["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key)) return;
       event.preventDefault();
+      if (!gameStartedRef.current) return;
       keysPressed.current.add(key);
       prepareNearMissSounds();
     }
@@ -409,38 +659,90 @@ export default function RatBunnyChaseGame() {
     }
   }
 
+  async function toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.warn("Fullscreen unavailable:", error);
+    }
+  }
+
+  useEffect(() => {
+    function updateFullscreen() {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    }
+
+    document.addEventListener("fullscreenchange", updateFullscreen);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", updateFullscreen);
+    };
+  }, []);
+
+  function startGame() {
+    if (gameStartedRef.current) return;
+
+    gameStartedRef.current = true;
+    setGameStarted(true);
+
+    const audio = audioRef.current;
+
+    if (audio) {
+      audio.volume = 0.35;
+      musicManuallyPaused.current = false;
+
+      audio.play().catch((error) => {
+        console.warn("Could not start background music:", error);
+      });
+    }
+
+    prepareNearMissSounds();
+  }
+
   async function toggleBackgroundMusic() {
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (fifthNearMissSoundPool.current.length === 0) {
-      fifthNearMissSoundPool.current = Array.from({ length: 4 }, () => {
-        const sound = new Audio(FIFTH_NEAR_MISS_SOUND_URL);
-        sound.preload = "auto";
-        sound.volume = 0.9;
-        sound.load();
-        return sound;
-      });
-    }
-
-    if (fifthNearMissAudioRef.current) {
-      fifthNearMissAudioRef.current.volume = 0.9;
-      fifthNearMissAudioRef.current.load();
-    }
-
-    await prepareNearMissSounds();
-
-    if (audio.paused) {
-      audio.volume = 0.35;
-      await audio.play();
-      setMusicPlaying(true);
-    } else {
+    if (!audio.paused) {
+      musicManuallyPaused.current = true;
       audio.pause();
-      setMusicPlaying(false);
+      return;
     }
+
+    musicManuallyPaused.current = false;
+    audio.volume = 0.35;
+
+    try {
+      await audio.play();
+    } catch (error) {
+      console.warn("Could not play music:", error);
+    }
+
+    // Prepare sound effects without delaying the music.
+    prepareNearMissSounds();
   }
 
   function resetGame() {
+    gameStartedRef.current = false;
+    setGameStarted(false);
+
+    musicManuallyPaused.current = true;
+
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
+    setMusicPlaying(false);
+
+    joystick.current = { x: 0, y: 0 };
+    keysPressed.current.clear();
+    setStickPosition({ x: 0, y: 0 });
     const startingRat = { x: 90, y: HEIGHT / 2 };
     const startingBunny = { x: WIDTH - 110, y: HEIGHT / 2 };
 
@@ -472,44 +774,137 @@ export default function RatBunnyChaseGame() {
   const escapingFloatingImage = nearMisses % 5 === 4 ? SPECIAL_FLOATING_IMAGE : FLOATING_IMAGE;
   const playerFloatingImage = specialNearMissTransfer ? SPECIAL_FLOATING_IMAGE : FLOATING_IMAGE;
 
+    function moveJoystick(event) {
+      if (joystickPointer.current !== event.pointerId) return;
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      const dx = event.clientX - centerX;
+      const dy = event.clientY - centerY;
+
+      const maxDistance = (rect.width - 56) / 2;
+      const distance = Math.hypot(dx, dy);
+      const scale = distance > maxDistance ? maxDistance / distance : 1;
+
+      const x = dx * scale;
+      const y = dy * scale;
+
+      const length = Math.hypot(x, y);
+
+      if (length > 0) {
+        joystick.current = {
+          x: x / length,
+          y: y / length,
+        };
+      } else {
+        // Touching the exact center: move upward by default.
+        joystick.current = { x: 0, y: -1 };
+      }
+
+      setStickPosition({ x, y });
+    }
+
+    function startMusicOnInteraction() {
+      if (!gameStartedRef.current) return;
+
+      const audio = audioRef.current;
+
+      if (!audio || musicManuallyPaused.current || !audio.paused) {
+        return;
+      }
+
+      audio.volume = 0.35;
+
+      audio.play().catch((error) => {
+        console.warn("Music playback failed:", error);
+      });
+    }
+
+    function startJoystick(event) {
+      if (!gameStartedRef.current) return;
+      if (joystickPointer.current !== null) return;
+
+      startMusicOnInteraction();
+
+      joystickPointer.current = event.pointerId;
+      event.currentTarget.setPointerCapture(event.pointerId);
+
+      prepareNearMissSounds();
+      moveJoystick(event);
+    }
+
+    function releaseJoystick(event) {
+      // On touchscreens, audio playback may only be
+      // permitted when the finger is released.
+      startMusicOnInteraction();
+      stopJoystick(event);
+    }
+
+    function stopJoystick(event) {
+      if (joystickPointer.current !== event.pointerId) return;
+
+      joystickPointer.current = null;
+      joystick.current = { x: 0, y: 0 };
+      setStickPosition({ x: 0, y: 0 });
+    }
+
   return (
-    <div className="min-h-screen bg-[#242424] p-6 text-zinc-100">
+    <div className="min-h-screen bg-[#242424] p-6 text-zinc-100 desktop-game-page">
       <audio ref={audioRef} src={BACKGROUND_MUSIC_URL} loop preload="auto" />
       <audio ref={fifthNearMissAudioRef} src={FIFTH_NEAR_MISS_SOUND_URL} preload="auto" />
 
-      <div className="mx-auto max-w-5xl space-y-5">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-4xl font-black tracking-tight">Whack-a-Rat</h1>
-            <p className="mt-2 flex items-center gap-2 text-base text-zinc-400">
-              <img
-                src="https://cdn.discordapp.com/emojis/1493971581549019147.webp?size=160"
-                alt="melee"
-                className="h-6 w-6 select-none"
-                draggable={false}
-              />
-              <span>Squish the brat and chuw the carrats! WASD or arrow keys to move.</span>
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={toggleBackgroundMusic} className="rounded-2xl px-5 py-2 shadow-sm">
-              {musicPlaying ? "Pause music" : "Play music"}
-            </Button>
-            <Button onClick={resetGame} className="rounded-2xl px-5 py-2 shadow-sm">
-              Reset chase
-            </Button>
-          </div>
-        </div>
+      <div className="mx-auto w-full max-w-none space-y-0">
 
-        <div className="inline-grid gap-4">
-	  <div
-	    style={{
-	      transform: "scale(1.5)",
-	      transformOrigin: "top center",
-	      marginBottom: "180px",
-	    }}
-	  >
-          <Card className="overflow-hidden rounded-3xl !border-0 !bg-transparent !shadow-none !ring-0">
+        <div className="flex justify-center">
+          <div
+            style={{
+              width: WIDTH * gameScale,
+              height: HEIGHT * gameScale,
+              position: "relative",
+            }}
+          >
+            {gameStarted && (
+              <div
+                className="desktop-game-controls fixed z-40 flex gap-2"
+                style={{
+                  top: desktopControlsPosition?.top,
+                  right: desktopControlsPosition?.right,
+                }}
+              >
+                <Button
+                  onClick={toggleBackgroundMusic}
+                  className="h-9 rounded-xl border border-white/20 bg-zinc-900/60 px-3 text-xs text-white backdrop-blur-sm hover:bg-zinc-900/80"
+                >
+                  {musicPlaying ? "Pause music" : "Resume music"}
+                </Button>
+
+                <Button
+                  onClick={resetGame}
+                  className="h-9 rounded-xl border border-white/20 bg-zinc-900/60 px-3 text-xs text-white backdrop-blur-sm hover:bg-zinc-900/80"
+                >
+                  Reset chase
+                </Button>
+
+                <Button
+                  onClick={toggleFullscreen}
+                  className="h-9 rounded-xl border border-white/20 bg-zinc-900/60 px-3 text-xs text-white backdrop-blur-sm hover:bg-zinc-900/80"
+                >
+                  {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                </Button>
+              </div>
+            )}
+
+            <div
+              style={{
+                width: WIDTH,
+                height: HEIGHT,
+                transform: `scale(${gameScale})`,
+                transformOrigin: "top left",
+              }}
+            >
+          <Card className="overflow-hidden !rounded-none !border-0 !bg-transparent !shadow-none !ring-0 !p-0 !gap-0">
             <CardContent className="p-0">
               <div
                 ref={boardRef}
@@ -523,7 +918,38 @@ export default function RatBunnyChaseGame() {
                   backgroundPosition: "center",
                 }}
               >
+
                 <div className="absolute inset-0 bg-black/85" />
+                
+                {!gameStarted && (
+                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-5 bg-black/65 text-center">
+                    <h1 className="text-5xl font-black text-white drop-shadow-lg">
+                      Whack-a-Rat
+                    </h1>
+
+                    <p className="text-lg font-semibold text-white">
+                      Squish the brat and chuw the carrats!
+                    </p>
+
+                    <Button
+                      onClick={startGame}
+                      className="h-16 rounded-2xl bg-white px-10 text-2xl font-black text-zinc-900 shadow-xl hover:bg-zinc-200"
+                    >
+                      ▶ Start Game
+                    </Button>
+                    
+                    <Button
+                      onClick={toggleFullscreen}
+                      className="h-12 rounded-xl bg-zinc-700 px-6 text-lg font-semibold text-white hover:bg-zinc-600"
+                    >
+                      {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                    </Button>
+
+                    <p className="text-sm text-zinc-300">
+                      WASD / Arrow keys / Mobile joystick
+                    </p>
+                  </div>
+                )}
 
                 <div className="absolute left-2 top-2 z-20 text-sm font-semibold text-white drop-shadow-lg">
                   <div>Carrats chuwed: {nearMisses}</div>
@@ -592,9 +1018,117 @@ export default function RatBunnyChaseGame() {
               </div>
             </CardContent>
           </Card>
-	</div>
         </div>
       </div>
     </div>
+
+{gameStarted && mobileControls?.mode === "portrait" && (
+  <div
+    className="fixed z-40 flex flex-col items-center gap-2 text-center"
+    style={{
+      left: mobileControls.left,
+      top: mobileControls.top,
+      transform: "translateX(-50%)",
+      width: "min(95vw, 360px)",
+    }}
+  >
+
+    <div className="flex flex-wrap justify-center gap-2">
+    {gameStarted && (
+      <Button onClick={toggleBackgroundMusic} className="h-9 rounded-xl px-3 text-xs">
+        {musicPlaying ? "Pause music" : "Play music"}
+      </Button>
+      )}
+
+      <Button onClick={resetGame} className="h-9 rounded-xl px-3 text-xs">
+        Reset chase
+      </Button>
+      
+      <Button
+        onClick={toggleFullscreen}
+        className="h-9 rounded-xl px-3 text-xs"
+      >
+        {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+      </Button>
+    </div>
+  </div>
+)}
+
+{gameStarted && mobileControls?.mode === "landscape" && (
+  <div
+    className={
+      mobileControls.overlay
+        ? "fixed z-40 flex w-max max-w-[calc(100vw-16px)] flex-row gap-1"
+        : "fixed z-40 flex w-28 flex-col gap-2"
+    }
+    style={{
+      left: mobileControls.left,
+      top: mobileControls.top,
+      ...(mobileControls.overlay && {
+        transform: "translateX(-100%)",
+      }),
+    }}
+  >
+  {gameStarted && (
+    <Button onClick={toggleBackgroundMusic} className={
+      mobileControls.overlay
+        ? "h-9 rounded-xl border border-white/20 bg-zinc-900/60 px-2 text-[11px] text-white backdrop-blur-sm hover:bg-zinc-900/80"
+        : "h-10 rounded-xl px-2 text-xs"
+    }>
+      {musicPlaying ? "Pause music" : "Play music"}
+    </Button>
+    )}
+
+    <Button onClick={resetGame} className={
+      mobileControls.overlay
+        ? "h-9 rounded-xl border border-white/20 bg-zinc-900/60 px-2 text-[11px] text-white backdrop-blur-sm hover:bg-zinc-900/80"
+        : "h-10 rounded-xl px-2 text-xs"
+    }>
+      Reset chase
+    </Button>
+    
+    <Button
+      onClick={toggleFullscreen}
+      className={
+        mobileControls.overlay
+          ? "h-9 rounded-xl border border-white/20 bg-zinc-900/60 px-2 text-[11px] text-white backdrop-blur-sm hover:bg-zinc-900/80"
+          : "h-10 rounded-xl px-2 text-xs"
+      }
+    >
+      {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+    </Button>
+  </div>
+)}
+
+    <div
+      className="mobile-joystick fixed z-50 h-28 w-28
+                 items-center justify-center rounded-full
+                 border-2 border-white/20 bg-white/10 select-none"
+      style={{
+        touchAction: "none",
+        left: joystickPlacement?.left ?? -200,
+        top: joystickPlacement?.top ?? -200,
+      }}
+      onTouchStart={startMusicOnInteraction}
+      onPointerDown={startJoystick}
+      onPointerMove={moveJoystick}
+      onPointerUp={releaseJoystick}
+      onPointerCancel={stopJoystick}
+      onLostPointerCapture={stopJoystick}
+    >
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2
+                   h-14 w-14 rounded-full border-2
+                   border-white/30 bg-white/30"
+        style={{
+          transform: `translate(
+            calc(-50% + ${stickPosition.x}px),
+            calc(-50% + ${stickPosition.y}px)
+          )`,
+        }}
+      />
+    </div>
+  </div>
+</div>
   );
 }
